@@ -1,0 +1,104 @@
+BootStrap: docker
+From: debian:bookworm-slim
+
+
+%runscript
+
+# This is where your code would go if you want it to run whenever the singularity image runs. If you would like to change inputs to your code, I recommend using the 'exec' function in singulatrity. Eg.,
+
+# singularity exec image_name.im python -c 'print('Hello World')'
+
+%setup
+    # Runs from outside the container during Bootstrap
+
+    # During the build process, commands in the %setup section are first 
+    # executed on the host system outside of the container after the base 
+    # OS has been installed. You can reference the container file system 
+    # with the $SINGULARITY_ROOTFS environment variable in the %setup section.
+
+    # Note
+
+    # Be careful with the %setup section! This scriptlet is executed 
+    # outside of the container on the host system itself, and is executed
+    # with elevated privileges. Commands in %setup can alter and potentially 
+    # damage the host.
+
+    
+%files
+    # The %files section allows you to copy files into the container with greater safety than using the %setup section.
+    # %files [from <stage>]
+    # <source> [<destination>]
+    # ...
+
+# %app*
+# # In some circumstances, it may be redundant to build different containers 
+# # for each app with nearly equivalent dependencies. Singularity supports 
+# # installing apps within internal modules based on the concept of Standard 
+# # Container Integration Format (SCI-F) All the apps are handled by 
+# # Singularity at this point. More information on Apps here.
+
+%environment
+
+# The %environment section allows you to define environment variables
+# that will be set at runtime. Note that these variables are not made
+# available at build time by their inclusion in the %environment section.
+# This means that if you need the same variables during the build process,
+# you should also define them in your %post section. Specifically:
+
+# during build: The %environment section is written to a file in the
+# container metadata directory. This file is not sourced.
+
+# during runtime: The file in the container metadata directory is sourced.
+
+# You should use the same conventions that you would use in a .bashrc
+# or .profile file. Consider this example from the def file above:
+    
+    export LC_ALL=C
+    TZ=UTC
+    DEBIAN_FRONTEND=noninteractive
+    CONDA_ENV_FOLDER="env"
+    
+%post
+    # Runs within the container during Bootstrap
+        # This section is where you can download files from the internet with 
+        # tools like git and wget, install new software and libraries, write 
+        # configuration files, create new directories, etc.
+
+    # Set up some required environment defaults
+    export TZ=UTC
+    export DEBIAN_FRONTEND=noninteractive
+    export PATH=/anaconda3/bin:$PATH
+
+    apt-get update
+    
+    # Alternate Anaconda3 Install
+    apt-get install -y  curl \
+                        libgl1-mesa-glx \
+                        libegl1-mesa \
+                        libxrandr2 \
+                        libxrandr2 \
+                        libxss1 \
+                        libxcursor1 \
+                        libxcomposite1 \
+                        libasound2 \
+                        libxi6 \
+                        libxtst6
+    CONDA_INSTALLER_VERSION="2023.03-1"
+    CONDA_INSTALLER_FILE="Anaconda3-${CONDA_INSTALLER_VERSION}-Linux-x86_64.sh"
+    curl -O "https://repo.anaconda.com/archive/${CONDA_INSTALLER_FILE}"
+    ANACONDA_INSTALL_PATH="${SINGULARITY_ROOTFS}/anaconda3"
+    
+    sh "${CONDA_INSTALLER_FILE}" -b -p "${ANACONDA_INSTALL_PATH}"
+
+    # "$PREFIX/conda" create -p "${SINGULARITY_ROOTFS}/env" "python=3.9"
+    # conda activate "${SINGULARITY_ROOTFS}/env"
+    # conda install -y scikit-learn-intelex
+
+    mkdir /scratch /data /gpfs20 /gpfs21 /gpfs22 /gpfs23 /dors /nobackup /accre /cvmfs /panfs
+
+%test
+
+    conda activate
+    echo "$(which python)"
+
+
