@@ -38,6 +38,7 @@ From: debian:bookworm-slim
 # # Singularity at this point. More information on Apps here.
 
 %environment
+    # copied inside the singularity image in the file
 
 # The %environment section allows you to define environment variables
 # that will be set at runtime. Note that these variables are not made
@@ -53,10 +54,11 @@ From: debian:bookworm-slim
 # You should use the same conventions that you would use in a .bashrc
 # or .profile file. Consider this example from the def file above:
     
-    export LC_ALL=C
-    TZ=UTC
-    DEBIAN_FRONTEND=noninteractive
-    CONDA_ENV_FOLDER="env"
+    export LC_ALL=en_US.utf-8
+    export LANG=en_US.utf-8
+    export TZ=UTC
+    export ANACONDA_ENVIRONMENT="conda_env"
+    source /opt/etc/bashrc
     
 %post
     # Runs within the container during Bootstrap
@@ -65,14 +67,16 @@ From: debian:bookworm-slim
         # configuration files, create new directories, etc.
 
     # Set up some required environment defaults
+    export LC_ALL=en_US.utf-8
+    export LANG=en_US.utf-8
     export TZ=UTC
-    export DEBIAN_FRONTEND=noninteractive
-    export PATH=/anaconda3/bin:$PATH
+    export ANACONDA_ENVIRONMENT="conda_env"
 
     apt-get update
     
     # Alternate Anaconda3 Install
     apt-get install -y  curl \
+                        which \
                         libgl1-mesa-glx \
                         libegl1-mesa \
                         libxrandr2 \
@@ -83,22 +87,59 @@ From: debian:bookworm-slim
                         libasound2 \
                         libxi6 \
                         libxtst6
+
     CONDA_INSTALLER_VERSION="2023.03-1"
     CONDA_INSTALLER_FILE="Anaconda3-${CONDA_INSTALLER_VERSION}-Linux-x86_64.sh"
     curl -O "https://repo.anaconda.com/archive/${CONDA_INSTALLER_FILE}"
     ANACONDA_INSTALL_PATH="${SINGULARITY_ROOTFS}/anaconda3"
     
+    export PYTHON_VERSION="3.9"
+    
     sh "${CONDA_INSTALLER_FILE}" -b -p "${ANACONDA_INSTALL_PATH}"
 
-    # "$PREFIX/conda" create -p "${SINGULARITY_ROOTFS}/env" "python=3.9"
-    # conda activate "${SINGULARITY_ROOTFS}/env"
-    # conda install -y scikit-learn-intelex
+    export PATH="$ANACONDA_INSTALL_PATH/bin":$PATH
+
+    conda init bash
+
+    alias ll="ls -la"
 
     mkdir /scratch /data /gpfs20 /gpfs21 /gpfs22 /gpfs23 /dors /nobackup /accre /cvmfs /panfs
 
+    mkdir -p ${SINGULARITY_ROOTFS}/opt/etc && \
+    conda create -y -n "${ANACONDA_ENVIRONMENT}" "python=${PYTHON_VERSION}" && \
+    echo -e "#! /bin/bash\n\n# script to activate the conda environment" > ~/.bashrc && \
+    conda init bash && \
+    echo -e "\nconda activate myTool_env" >> ~/.bashrc && \
+    echo "echo \"Conda activation\"" >> ~/.bashrc && \
+    conda clean -a && \
+    cp ~/.bashrc /opt/etc/bashrc
+
+    # mkdir -p /opt/etc
+    # yum install -y which \
+    # && yum clean all \
+    # && conda create -y -n myTool_env  \
+    # && echo -e "#! /bin/bash\n\n# script to activate the conda environment" > ~/.bashrc \
+    # && conda init bash \
+    # && echo -e "\nconda activate myTool_env" >> ~/.bashrc \
+    # && echo "echo \"Hello World\"" >>  ~/.bashrc \
+    # && conda clean -a \
+    # && cp ~/.bashrc /opt/etc/bashrc
+
 %test
 
-    conda activate
-    echo "$(which python)"
+    /anaconda3/bin/conda activate "${SINGULARITY_ROOTFS}/venv"
+    if [ -z "$(which python)" ]; then 
+        echo "success"
+    else
+        echo "fail"
+    fi
+
+%labels
+    Author dax.westerman@vumc.org
+    Version v0.0.1
+
+%help
+    This container supplies a conda environment with GLIBC suffient
+    to run GPT4ALL
 
 
