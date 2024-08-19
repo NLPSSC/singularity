@@ -1,13 +1,11 @@
 BootStrap: docker
 From: debian:bookworm-slim
 
+%arguments
+  VERSION=0.1.0
+  AUTHOR=dax.westerman@vumc.org
 
-%runscript
-
-# This is where your code would go if you want it to run whenever the singularity image runs. If you would like to change inputs to your code, I recommend using the 'exec' function in singulatrity. Eg.,
-
-# singularity exec image_name.im python -c 'print('Hello World')'
-
+  
 %setup
     # Runs from outside the container during Bootstrap
 
@@ -23,42 +21,43 @@ From: debian:bookworm-slim
     # with elevated privileges. Commands in %setup can alter and potentially 
     # damage the host.
 
-    
 %files
     # The %files section allows you to copy files into the container with greater safety than using the %setup section.
     # %files [from <stage>]
     # <source> [<destination>]
     # ...
 
-# %app*
-# # In some circumstances, it may be redundant to build different containers 
-# # for each app with nearly equivalent dependencies. Singularity supports 
-# # installing apps within internal modules based on the concept of Standard 
-# # Container Integration Format (SCI-F) All the apps are handled by 
-# # Singularity at this point. More information on Apps here.
+    # %app*
+    # # In some circumstances, it may be redundant to build different containers 
+    # # for each app with nearly equivalent dependencies. Singularity supports 
+    # # installing apps within internal modules based on the concept of Standard 
+    # # Container Integration Format (SCI-F) All the apps are handled by 
+    # # Singularity at this point. More information on Apps here.
+
 
 %environment
     # copied inside the singularity image in the file
 
-# The %environment section allows you to define environment variables
-# that will be set at runtime. Note that these variables are not made
-# available at build time by their inclusion in the %environment section.
-# This means that if you need the same variables during the build process,
-# you should also define them in your %post section. Specifically:
+    # The %environment section allows you to define environment variables
+    # that will be set at runtime. Note that these variables are not made
+    # available at build time by their inclusion in the %environment section.
+    # This means that if you need the same variables during the build process,
+    # you should also define them in your %post section. Specifically:
 
-# during build: The %environment section is written to a file in the
-# container metadata directory. This file is not sourced.
+    # during build: The %environment section is written to a file in the
+    # container metadata directory. This file is not sourced.
 
-# during runtime: The file in the container metadata directory is sourced.
+    # during runtime: The file in the container metadata directory is sourced.
 
-# You should use the same conventions that you would use in a .bashrc
-# or .profile file. Consider this example from the def file above:
+    # You should use the same conventions that you would use in a .bashrc
+    # or .profile file. Consider this example from the def file above:
     
     export LC_ALL=en_US.utf-8
     export LANG=en_US.utf-8
     export TZ=UTC
     export ANACONDA_ENVIRONMENT="conda_env"
     source /opt/etc/bashrc
+
     
 %post
     # Runs within the container during Bootstrap
@@ -77,6 +76,7 @@ From: debian:bookworm-slim
     # Alternate Anaconda3 Install
     apt-get install -y  curl \
                         which \
+                        openssh-client \
                         libgl1-mesa-glx \
                         libegl1-mesa \
                         libxrandr2 \
@@ -99,35 +99,31 @@ From: debian:bookworm-slim
 
     export PATH="$ANACONDA_INSTALL_PATH/bin":$PATH
 
-    conda init bash
-
-    alias ll="ls -la"
+    SYSTEM_BASHRC=/opt/etc/bashrc
 
     mkdir /scratch /data /gpfs20 /gpfs21 /gpfs22 /gpfs23 /dors /nobackup /accre /cvmfs /panfs
 
-    mkdir -p ${SINGULARITY_ROOTFS}/opt/etc && \
+    mkdir -p /opt/etc && \
     conda create -y -n "${ANACONDA_ENVIRONMENT}" "python=${PYTHON_VERSION}" && \
-    echo -e "#! /bin/bash\n\n# script to activate the conda environment" > ~/.bashrc && \
-    conda init bash && \
-    echo -e "\nconda activate myTool_env" >> ~/.bashrc && \
-    echo "echo \"Conda activation\"" >> ~/.bashrc && \
-    conda clean -a && \
-    cp ~/.bashrc /opt/etc/bashrc
+        echo -e "#! /bin/bash\n\n# script to activate the conda environment" > ~/.bashrc && \
+        conda init bash && \
+        echo -e "\nconda activate myTool_env" >> ~/.bashrc && \
+        echo "echo \"Conda activation\"" >> ~/.bashrc && \
+        conda clean -a && \
+        cp ~/.bashrc $SYSTEM_BASHRC
 
-    # mkdir -p /opt/etc
-    # yum install -y which \
-    # && yum clean all \
-    # && conda create -y -n myTool_env  \
-    # && echo -e "#! /bin/bash\n\n# script to activate the conda environment" > ~/.bashrc \
-    # && conda init bash \
-    # && echo -e "\nconda activate myTool_env" >> ~/.bashrc \
-    # && echo "echo \"Hello World\"" >>  ~/.bashrc \
-    # && conda clean -a \
-    # && cp ~/.bashrc /opt/etc/bashrc
+    echo "alias ll=\"ls -la\"" >> $SYSTEM_BASHRC
+
+%runscript
+
+    # This is where your code would go if you want it to run whenever the singularity image runs. If you would like to change inputs to your code, I recommend using the 'exec' function in singulatrity. Eg.,
+
+    # singularity exec image_name.im python -c 'print('Hello World')'
+
 
 %test
 
-    /anaconda3/bin/conda activate "${SINGULARITY_ROOTFS}/venv"
+    /anaconda3/bin/conda activate /venv
     if [ -z "$(which python)" ]; then 
         echo "success"
     else
@@ -135,8 +131,8 @@ From: debian:bookworm-slim
     fi
 
 %labels
-    Author dax.westerman@vumc.org
-    Version v0.0.1
+    Author {{AUTHOR}}
+    Version {{VERSION}}
 
 %help
     This container supplies a conda environment with GLIBC suffient
