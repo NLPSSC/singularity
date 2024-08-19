@@ -27,6 +27,9 @@ From: debian:bookworm-slim
     # <source> [<destination>]
     # ...
 
+    # ../Anaconda3-2023.03-1-Linux-x86_64.sh Anaconda3-2023.03-1-Linux-x86_64.sh
+    # ../cuda_12.2.2_535.104.05_linux.run cuda_12.2.2_535.104.05_linux.run
+
     # %app*
     # # In some circumstances, it may be redundant to build different containers 
     # # for each app with nearly equivalent dependencies. Singularity supports 
