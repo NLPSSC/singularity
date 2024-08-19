@@ -28,8 +28,8 @@ From: debian:bookworm-slim
     # <source> [<destination>]
     # ...
 
-    ../Anaconda3-2023.03-1-Linux-x86_64.sh Anaconda3-2023.03-1-Linux-x86_64.sh
-    ../cuda_12.2.2_535.104.05_linux.run cuda_12.2.2_535.104.05_linux.run
+    # ../Anaconda3-2023.03-1-Linux-x86_64.sh Anaconda3-2023.03-1-Linux-x86_64.sh
+    # ../cuda_12.2.2_535.104.05_linux.run cuda_12.2.2_535.104.05_linux.run
 
     # %app*
     # # In some circumstances, it may be redundant to build different containers 
@@ -39,129 +39,129 @@ From: debian:bookworm-slim
     # # Singularity at this point. More information on Apps here.
 
 
-# %environment
-#     # copied inside the singularity image in the file
+%environment
+    # copied inside the singularity image in the file
 
-#     # The %environment section allows you to define environment variables
-#     # that will be set at runtime. Note that these variables are not made
-#     # available at build time by their inclusion in the %environment section.
-#     # This means that if you need the same variables during the build process,
-#     # you should also define them in your %post section. Specifically:
+    # The %environment section allows you to define environment variables
+    # that will be set at runtime. Note that these variables are not made
+    # available at build time by their inclusion in the %environment section.
+    # This means that if you need the same variables during the build process,
+    # you should also define them in your %post section. Specifically:
 
-#     # during build: The %environment section is written to a file in the
-#     # container metadata directory. This file is not sourced.
+    # during build: The %environment section is written to a file in the
+    # container metadata directory. This file is not sourced.
 
-#     # during runtime: The file in the container metadata directory is sourced.
+    # during runtime: The file in the container metadata directory is sourced.
 
-#     # You should use the same conventions that you would use in a .bashrc
-#     # or .profile file. Consider this example from the def file above:
+    # You should use the same conventions that you would use in a .bashrc
+    # or .profile file. Consider this example from the def file above:
     
-#     export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
-#     export TZ=America/Chicago
-#     export ANACONDA_ENVIRONMENT={{MASTER_CONDA_ENV}}
-#     source /opt/etc/bashrc
+    export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+    export TZ=America/Chicago
+    export ANACONDA_ENVIRONMENT={{MASTER_CONDA_ENV}}
+    source /opt/etc/bashrc
 
     
-# %post
-#     # Runs within the container during Bootstrap
-#         # This section is where you can download files from the internet with 
-#         # tools like git and wget, install new software and libraries, write 
-#         # configuration files, create new directories, etc.
+%post
+    # Runs within the container during Bootstrap
+        # This section is where you can download files from the internet with 
+        # tools like git and wget, install new software and libraries, write 
+        # configuration files, create new directories, etc.
 
-#     mkdir /scratch /data /gpfs20 /gpfs21 /gpfs22 /gpfs23 /dors /nobackup /accre /cvmfs /panfs
+    mkdir /scratch /data /gpfs20 /gpfs21 /gpfs22 /gpfs23 /dors /nobackup /accre /cvmfs /panfs
 
-#     export PYTHON_VERSION="3.10"
+    export PYTHON_VERSION="3.10"
 
-#     # Set up some required environment defaults
-#     export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
-#     export TZ=America/Chicago
-#     export ANACONDA_ENVIRONMENT={{MASTER_CONDA_ENV}}
+    # Set up some required environment defaults
+    export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+    export TZ=America/Chicago
+    export ANACONDA_ENVIRONMENT={{MASTER_CONDA_ENV}}
 
-#     apt-get update && apt-get -y upgrade
+    apt-get update && apt-get -y upgrade
     
-#     # Alternate Anaconda3 Install
-#     apt-get install -y  curl \
-#                         which \
-#                         git \
-#                         openssh-client \
-#                         libgl1-mesa-glx \
-#                         libegl1-mesa \
-#                         libxrandr2 \
-#                         libxss1 \
-#                         libxcursor1 \
-#                         libxcomposite1 \
-#                         libasound2 \
-#                         libxi6 \
-#                         libxtst6
-#                         build-essential \
-#                         wget \
-#                         bzip2 \
-#                         ca-certificates \
-#                         libglib2.0-0 \
-#                         libxext6 \
-#                         libsm6 \
-#                         libxrender1 \
+    # Alternate Anaconda3 Install
+    apt-get install -y  curl \
+                        which \
+                        git \
+                        openssh-client \
+                        libgl1-mesa-glx \
+                        libegl1-mesa \
+                        libxrandr2 \
+                        libxss1 \
+                        libxcursor1 \
+                        libxcomposite1 \
+                        libasound2 \
+                        libxi6 \
+                        libxtst6
+                        build-essential \
+                        wget \
+                        bzip2 \
+                        ca-certificates \
+                        libglib2.0-0 \
+                        libxext6 \
+                        libsm6 \
+                        libxrender1 \
     
-#     rm -rf /var/lib/apt/lists/*
-#     apt-get clean
+    rm -rf /var/lib/apt/lists/*
+    apt-get clean
 
-#     CONDA_INSTALLER_VERSION="2023.03-1"
-#     CONDA_INSTALLER_FILE="Anaconda3-${CONDA_INSTALLER_VERSION}-Linux-x86_64.sh"
-#     curl -O "https://repo.anaconda.com/archive/${CONDA_INSTALLER_FILE}"
-#     ANACONDA_INSTALL_PATH="${SINGULARITY_ROOTFS}/anaconda3"
+    CONDA_INSTALLER_VERSION="2023.03-1"
+    CONDA_INSTALLER_FILE="Anaconda3-${CONDA_INSTALLER_VERSION}-Linux-x86_64.sh"
+    curl -O "https://repo.anaconda.com/archive/${CONDA_INSTALLER_FILE}"
+    ANACONDA_INSTALL_PATH="${SINGULARITY_ROOTFS}/anaconda3"
     
-#     /bin/bash "${CONDA_INSTALLER_FILE}" -bfp "${ANACONDA_INSTALL_PATH}"
+    /bin/bash "${CONDA_INSTALLER_FILE}" -bfp "${ANACONDA_INSTALL_PATH}"
 
-#     conda config --file /.condarc --add channels defaults
-#     conda config --file /.condarc --add channels conda-forge
-#     conda update conda
+    conda config --file /.condarc --add channels defaults
+    conda config --file /.condarc --add channels conda-forge
+    conda update conda
 
-#     # export PATH="$ANACONDA_INSTALL_PATH/bin":$PATH
+    # export PATH="$ANACONDA_INSTALL_PATH/bin":$PATH
 
-#     # SYSTEM_BASHRC=/opt/etc/bashrc
+    # SYSTEM_BASHRC=/opt/etc/bashrc
 
-#     # mkdir -p /opt/etc
-#     # conda init bash
-#     # /usr/bin/bash
+    # mkdir -p /opt/etc
+    # conda init bash
+    # /usr/bin/bash
 
-#     # conda activate
-#     # conda clean -a
-#     # conda create -y -n "${ANACONDA_ENVIRONMENT}" "python=${PYTHON_VERSION}"
+    # conda activate
+    # conda clean -a
+    # conda create -y -n "${ANACONDA_ENVIRONMENT}" "python=${PYTHON_VERSION}"
     
-#     #  && \
-#     #     echo -e "#! /bin/bash\n\n# script to activate the conda environment" > ~/.bashrc && \
-#     #     conda init bash && \
-#     #     echo -e "\nconda activate ${ANACONDA_ENVIRONMENT}" >> ~/.bashrc && \
-#     #     # echo "echo \"Conda activation\"" >> ~/.bashrc && \
-#     #     conda clean -a && \
-#     #     cp ~/.bashrc $SYSTEM_BASHRC
+    #  && \
+    #     echo -e "#! /bin/bash\n\n# script to activate the conda environment" > ~/.bashrc && \
+    #     conda init bash && \
+    #     echo -e "\nconda activate ${ANACONDA_ENVIRONMENT}" >> ~/.bashrc && \
+    #     # echo "echo \"Conda activation\"" >> ~/.bashrc && \
+    #     conda clean -a && \
+    #     cp ~/.bashrc $SYSTEM_BASHRC
 
-#     # echo "alias ll=\"ls -la\"" >> ~/.bashrc
+    # echo "alias ll=\"ls -la\"" >> ~/.bashrc
 
-#     # cp ~/.bashrc $SYSTEM_BASHRC
-#     # cp ~/.bashrc /root/.bashrc
+    # cp ~/.bashrc $SYSTEM_BASHRC
+    # cp ~/.bashrc /root/.bashrc
 
-# %runscript
+%runscript
 
-#     # This is where your code would go if you want it to run whenever the singularity image runs. If you would like to change inputs to your code, I recommend using the 'exec' function in singulatrity. Eg.,
+    # This is where your code would go if you want it to run whenever the singularity image runs. If you would like to change inputs to your code, I recommend using the 'exec' function in singulatrity. Eg.,
 
-#     # singularity exec image_name.im python -c 'print('Hello World')'
+    # singularity exec image_name.im python -c 'print('Hello World')'
 
-# %test
+%test
 
-#     # /anaconda3/bin/conda activate {{MASTER_CONDA_ENV}}
-#     # if [ -z "$(which python)" ]; then 
-#     #     echo "success"
-#     # else
-#     #     echo "fail"
-#     # fi
+    # /anaconda3/bin/conda activate {{MASTER_CONDA_ENV}}
+    # if [ -z "$(which python)" ]; then 
+    #     echo "success"
+    # else
+    #     echo "fail"
+    # fi
 
-# %labels
-#     Author {{AUTHOR}}
-#     Version {{VERSION}}
+%labels
+    Author {{AUTHOR}}
+    Version {{VERSION}}
 
-# %help
-#     This container supplies a conda environment with GLIBC suffient
-#     to run GPT4ALL
+%help
+    This container supplies a conda environment with GLIBC suffient
+    to run GPT4ALL
 
 
