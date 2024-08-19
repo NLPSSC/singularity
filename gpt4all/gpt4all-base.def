@@ -1,5 +1,5 @@
 Bootstrap: localimage
-From: ../conda-base/conda-base.sif
+From: /home/westerd/data/singularity/conda-base/conda-base.sif
 
 %arguments
   VERSION=0.1.0
@@ -72,17 +72,17 @@ From: ../conda-base/conda-base.sif
     export ANACONDA_ENVIRONMENT="conda_env"
     CONDA="/anaconda3/bin/conda"
 
-    apt-get update
+    # apt-get update
         
-    $CONDA activate 
+    # $CONDA activate 
 
-    $CONDA create -n "$ANACONDA_ENVIRONMENT"
+    # $CONDA create -n "$ANACONDA_ENVIRONMENT"
 
-    $CONDA activate "$ANACONDA_ENVIRONMENT"
+    # $CONDA activate "$ANACONDA_ENVIRONMENT"
 
-    python -m pip install gpt4all
+    # python -m pip install gpt4all
 
-    mkdir -p 
+    # mkdir -p 
 
 %runscript
 
@@ -93,12 +93,12 @@ From: ../conda-base/conda-base.sif
 
 %test
 
-    /anaconda3/bin/conda activate /venv
-    if [ -z "$(which python)" ]; then 
-        echo "success"
-    else
-        echo "fail"
-    fi
+    # /anaconda3/bin/conda activate /venv
+    # if [ -z "$(which python)" ]; then 
+    #     echo "success"
+    # else
+    #     echo "fail"
+    # fi
 
 %labels
     Author {{AUTHOR}}

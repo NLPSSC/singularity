@@ -4,7 +4,7 @@ From: debian:bookworm-slim
 %arguments
   VERSION=0.1.0
   AUTHOR=dax.westerman@vumc.org
-
+  MASTER_CONDA_ENV="conda_env"
   
 %setup
     # Runs from outside the container during Bootstrap
@@ -55,7 +55,7 @@ From: debian:bookworm-slim
     export LC_ALL=en_US.utf-8
     export LANG=en_US.utf-8
     export TZ=UTC
-    export ANACONDA_ENVIRONMENT="conda_env"
+    export ANACONDA_ENVIRONMENT={{MASTER_CONDA_ENV}}
     source /opt/etc/bashrc
 
     
@@ -69,7 +69,7 @@ From: debian:bookworm-slim
     export LC_ALL=en_US.utf-8
     export LANG=en_US.utf-8
     export TZ=UTC
-    export ANACONDA_ENVIRONMENT="conda_env"
+    export ANACONDA_ENVIRONMENT={{MASTER_CONDA_ENV}}
 
     apt-get update
     
@@ -104,16 +104,26 @@ From: debian:bookworm-slim
 
     mkdir /scratch /data /gpfs20 /gpfs21 /gpfs22 /gpfs23 /dors /nobackup /accre /cvmfs /panfs
 
-    mkdir -p /opt/etc && \
-    conda create -y -n "${ANACONDA_ENVIRONMENT}" "python=${PYTHON_VERSION}" && \
-        echo -e "#! /bin/bash\n\n# script to activate the conda environment" > ~/.bashrc && \
-        conda init bash && \
-        echo -e "\nconda activate ${ANACONDA_ENVIRONMENT}" >> ~/.bashrc && \
-        # echo "echo \"Conda activation\"" >> ~/.bashrc && \
-        conda clean -a && \
-        cp ~/.bashrc $SYSTEM_BASHRC
+    mkdir -p /opt/etc
+    conda init bash
+    /usr/bin/bash
 
-    echo "alias ll=\"ls -la\"" >> $SYSTEM_BASHRC
+    # conda activate
+    # conda clean -a
+    # conda create -y -n "${ANACONDA_ENVIRONMENT}" "python=${PYTHON_VERSION}"
+    
+    #  && \
+    #     echo -e "#! /bin/bash\n\n# script to activate the conda environment" > ~/.bashrc && \
+    #     conda init bash && \
+    #     echo -e "\nconda activate ${ANACONDA_ENVIRONMENT}" >> ~/.bashrc && \
+    #     # echo "echo \"Conda activation\"" >> ~/.bashrc && \
+    #     conda clean -a && \
+    #     cp ~/.bashrc $SYSTEM_BASHRC
+
+    echo "alias ll=\"ls -la\"" >> ~/.bashrc
+
+    cp ~/.bashrc $SYSTEM_BASHRC
+    # cp ~/.bashrc /root/.bashrc
 
 %runscript
 
@@ -121,15 +131,14 @@ From: debian:bookworm-slim
 
     # singularity exec image_name.im python -c 'print('Hello World')'
 
-
 %test
 
-    /anaconda3/bin/conda activate /venv
-    if [ -z "$(which python)" ]; then 
-        echo "success"
-    else
-        echo "fail"
-    fi
+    # /anaconda3/bin/conda activate {{MASTER_CONDA_ENV}}
+    # if [ -z "$(which python)" ]; then 
+    #     echo "success"
+    # else
+    #     echo "fail"
+    # fi
 
 %labels
     Author {{AUTHOR}}
