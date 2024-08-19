@@ -1,5 +1,6 @@
 BootStrap: docker
 From: debian:bookworm-slim
+# Stage: build
 
 %arguments
   VERSION=0.1.0
@@ -55,9 +56,8 @@ From: debian:bookworm-slim
     # You should use the same conventions that you would use in a .bashrc
     # or .profile file. Consider this example from the def file above:
     
-    export LC_ALL=en_US.utf-8
-    export LANG=en_US.utf-8
-    export TZ=UTC
+    export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+    export TZ=America/Chicago
     export ANACONDA_ENVIRONMENT={{MASTER_CONDA_ENV}}
     source /opt/etc/bashrc
 
@@ -68,13 +68,16 @@ From: debian:bookworm-slim
         # tools like git and wget, install new software and libraries, write 
         # configuration files, create new directories, etc.
 
+    mkdir /scratch /data /gpfs20 /gpfs21 /gpfs22 /gpfs23 /dors /nobackup /accre /cvmfs /panfs
+
+    export PYTHON_VERSION="3.10"
+
     # Set up some required environment defaults
-    export LC_ALL=en_US.utf-8
-    export LANG=en_US.utf-8
-    export TZ=UTC
+    export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+    export TZ=America/Chicago
     export ANACONDA_ENVIRONMENT={{MASTER_CONDA_ENV}}
 
-    apt-get update
+    apt-get update && apt-get -y upgrade
     
     # Alternate Anaconda3 Install
     apt-get install -y  curl \
@@ -84,32 +87,42 @@ From: debian:bookworm-slim
                         libgl1-mesa-glx \
                         libegl1-mesa \
                         libxrandr2 \
-                        libxrandr2 \
                         libxss1 \
                         libxcursor1 \
                         libxcomposite1 \
                         libasound2 \
                         libxi6 \
                         libxtst6
+                        build-essential \
+                        wget \
+                        bzip2 \
+                        ca-certificates \
+                        libglib2.0-0 \
+                        libxext6 \
+                        libsm6 \
+                        libxrender1 \
+    
+    rm -rf /var/lib/apt/lists/*
+    apt-get clean
 
     CONDA_INSTALLER_VERSION="2023.03-1"
     CONDA_INSTALLER_FILE="Anaconda3-${CONDA_INSTALLER_VERSION}-Linux-x86_64.sh"
     curl -O "https://repo.anaconda.com/archive/${CONDA_INSTALLER_FILE}"
     ANACONDA_INSTALL_PATH="${SINGULARITY_ROOTFS}/anaconda3"
     
-    export PYTHON_VERSION="3.9"
-    
-    sh "${CONDA_INSTALLER_FILE}" -b -p "${ANACONDA_INSTALL_PATH}"
+    /bin/bash "${CONDA_INSTALLER_FILE}" -bfp "${ANACONDA_INSTALL_PATH}"
 
-    export PATH="$ANACONDA_INSTALL_PATH/bin":$PATH
+    conda config --file /.condarc --add channels defaults
+    conda config --file /.condarc --add channels conda-forge
+    conda update conda
 
-    SYSTEM_BASHRC=/opt/etc/bashrc
+    # export PATH="$ANACONDA_INSTALL_PATH/bin":$PATH
 
-    mkdir /scratch /data /gpfs20 /gpfs21 /gpfs22 /gpfs23 /dors /nobackup /accre /cvmfs /panfs
+    # SYSTEM_BASHRC=/opt/etc/bashrc
 
-    mkdir -p /opt/etc
-    conda init bash
-    /usr/bin/bash
+    # mkdir -p /opt/etc
+    # conda init bash
+    # /usr/bin/bash
 
     # conda activate
     # conda clean -a
@@ -123,9 +136,9 @@ From: debian:bookworm-slim
     #     conda clean -a && \
     #     cp ~/.bashrc $SYSTEM_BASHRC
 
-    echo "alias ll=\"ls -la\"" >> ~/.bashrc
+    # echo "alias ll=\"ls -la\"" >> ~/.bashrc
 
-    cp ~/.bashrc $SYSTEM_BASHRC
+    # cp ~/.bashrc $SYSTEM_BASHRC
     # cp ~/.bashrc /root/.bashrc
 
 %runscript
