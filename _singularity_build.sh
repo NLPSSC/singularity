@@ -20,4 +20,4 @@ section_start="--section post"
 # fi
 
 # --section post
-singularity build --force  "$sif_file" "$def_file" 
+echo singularity build --force --no-cache "$sif_file" "$def_file" 
