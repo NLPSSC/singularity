@@ -1,5 +1,5 @@
-BootStrap: docker
-From: debian:bookworm-slim
+Bootstrap: localimage
+From: ../conda-base/conda-base.sif
 
 %arguments
   VERSION=0.1.0
@@ -70,50 +70,19 @@ From: debian:bookworm-slim
     export LANG=en_US.utf-8
     export TZ=UTC
     export ANACONDA_ENVIRONMENT="conda_env"
+    CONDA="/anaconda3/bin/conda"
 
     apt-get update
-    
-    # Alternate Anaconda3 Install
-    apt-get install -y  curl \
-                        which \
-                        git \
-                        openssh-client \
-                        libgl1-mesa-glx \
-                        libegl1-mesa \
-                        libxrandr2 \
-                        libxrandr2 \
-                        libxss1 \
-                        libxcursor1 \
-                        libxcomposite1 \
-                        libasound2 \
-                        libxi6 \
-                        libxtst6
+        
+    $CONDA activate 
 
-    CONDA_INSTALLER_VERSION="2023.03-1"
-    CONDA_INSTALLER_FILE="Anaconda3-${CONDA_INSTALLER_VERSION}-Linux-x86_64.sh"
-    curl -O "https://repo.anaconda.com/archive/${CONDA_INSTALLER_FILE}"
-    ANACONDA_INSTALL_PATH="${SINGULARITY_ROOTFS}/anaconda3"
-    
-    export PYTHON_VERSION="3.9"
-    
-    sh "${CONDA_INSTALLER_FILE}" -b -p "${ANACONDA_INSTALL_PATH}"
+    $CONDA create -n "$ANACONDA_ENVIRONMENT"
 
-    export PATH="$ANACONDA_INSTALL_PATH/bin":$PATH
+    $CONDA activate "$ANACONDA_ENVIRONMENT"
 
-    SYSTEM_BASHRC=/opt/etc/bashrc
+    python -m pip install gpt4all
 
-    mkdir /scratch /data /gpfs20 /gpfs21 /gpfs22 /gpfs23 /dors /nobackup /accre /cvmfs /panfs
-
-    mkdir -p /opt/etc && \
-    conda create -y -n "${ANACONDA_ENVIRONMENT}" "python=${PYTHON_VERSION}" && \
-        echo -e "#! /bin/bash\n\n# script to activate the conda environment" > ~/.bashrc && \
-        conda init bash && \
-        echo -e "\nconda activate ${ANACONDA_ENVIRONMENT}" >> ~/.bashrc && \
-        # echo "echo \"Conda activation\"" >> ~/.bashrc && \
-        conda clean -a && \
-        cp ~/.bashrc $SYSTEM_BASHRC
-
-    echo "alias ll=\"ls -la\"" >> $SYSTEM_BASHRC
+    mkdir -p 
 
 %runscript
 

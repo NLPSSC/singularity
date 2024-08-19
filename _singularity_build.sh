@@ -13,4 +13,11 @@ if [[ "$LOCAL_SINGULARITY_BUILD"="1" ]]; then
     ELEVATED_PERMS="sudo"
 fi
 
-singularity build --force --section post "$sif_file" "$def_file" 
+section_start="--section post"
+# echo "$SINGULARITY_SECTION"
+# if [[ ! -z "$SINGULARITY_SECTION" ]]; then 
+#     section_start="--section $SINGULARITY_SECTION"
+# fi
+
+# --section post
+singularity build --force  "$sif_file" "$def_file" 
