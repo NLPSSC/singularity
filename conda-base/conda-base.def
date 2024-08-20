@@ -3,10 +3,11 @@ From: debian:bookworm-slim
 # Stage: build
 
 %arguments
-  VERSION=0.1.0
-  AUTHOR=dax.westerman@vumc.org
-  MASTER_CONDA_ENV="conda_env"
-  
+    VERSION=0.1.0
+    AUTHOR=dax.westerman@vumc.org
+    MASTER_CONDA_ENV="conda_env"
+    CONDA_INSTALLER_VERSION="2023.03-1"
+    
 %setup
     # Runs from outside the container during Bootstrap
 
@@ -22,21 +23,13 @@ From: debian:bookworm-slim
     # with elevated privileges. Commands in %setup can alter and potentially 
     # damage the host.
 
-%files
-    # The %files section allows you to copy files into the container with greater safety than using the %setup section.
-    # %files [from <stage>]
-    # <source> [<destination>]
-    # ...
+    
+    export CONDA_INSTALLER_FILE="Anaconda3-{{CONDA_INSTALLER_VERSION}}-Linux-x86_64.sh"
+    export HOST_ROOT=$(pwd)
+    # echo "HOST_ROOT: $HOST_ROOT"
+    # test ! -e "${HOST_ROOT}/${CONDA_INSTALLER_FILE}" || curl "https://repo.anaconda.com/archive/${CONDA_INSTALLER_FILE}" -o "${HOST_ROOT}/${CONDA_INSTALLER_FILE}"
+    # cp "${HOST_ROOT}/${CONDA_INSTALLER_FILE}" ${SINGULARITY_ROOTFS}/Anaconda3-${CONDA_INSTALLER_VERSION}-Linux-x86_64.sh
 
-    # ../Anaconda3-2023.03-1-Linux-x86_64.sh Anaconda3-2023.03-1-Linux-x86_64.sh
-    # ../cuda_12.2.2_535.104.05_linux.run cuda_12.2.2_535.104.05_linux.run
-
-    # %app*
-    # # In some circumstances, it may be redundant to build different containers 
-    # # for each app with nearly equivalent dependencies. Singularity supports 
-    # # installing apps within internal modules based on the concept of Standard 
-    # # Container Integration Format (SCI-F) All the apps are handled by 
-    # # Singularity at this point. More information on Apps here.
 
 
 %environment
@@ -59,7 +52,26 @@ From: debian:bookworm-slim
     export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
     export TZ=America/Chicago
     export ANACONDA_ENVIRONMENT={{MASTER_CONDA_ENV}}
-    source /opt/etc/bashrc
+    export CONDA_INSTALLER_FILE="Anaconda3-{{CONDA_INSTALLER_VERSION}}-Linux-x86_64.sh"
+    export HOST_ROOT=$(pwd)
+    
+
+%files
+    # The %files section allows you to copy files into the container with greater safety than using the %setup section.
+    # %files [from <stage>]
+    # <source> [<destination>]
+    # ...
+    
+    # ./Anaconda3-${CONDA_INSTALLER_VERSION}-Linux-x86_64.sh ${SINGULARITY_ROOTFS}/Anaconda3-${CONDA_INSTALLER_VERSION}-Linux-x86_64.sh
+    # /cuda_12.2.2_535.104.05_linux.run ${SINGULARITY_ROOTFS}/cuda_12.2.2_535.104.05_linux.run
+
+    # %app*
+    # # In some circumstances, it may be redundant to build different containers 
+    # # for each app with nearly equivalent dependencies. Singularity supports 
+    # # installing apps within internal modules based on the concept of Standard 
+    # # Container Integration Format (SCI-F) All the apps are handled by 
+    # # Singularity at this point. More information on Apps here.
+
 
     
 %post
@@ -67,6 +79,8 @@ From: debian:bookworm-slim
         # This section is where you can download files from the internet with 
         # tools like git and wget, install new software and libraries, write 
         # configuration files, create new directories, etc.
+
+    
 
     mkdir /scratch /data /gpfs20 /gpfs21 /gpfs22 /gpfs23 /dors /nobackup /accre /cvmfs /panfs
 
@@ -77,12 +91,13 @@ From: debian:bookworm-slim
     export TZ=America/Chicago
     export ANACONDA_ENVIRONMENT={{MASTER_CONDA_ENV}}
 
-    apt-get update && apt-get -y upgrade
+    apt-get update && apt-get -y upgrade && apt update
     
     # Alternate Anaconda3 Install
     apt-get install -y  curl \
                         which \
                         git \
+                        build-essential \
                         openssh-client \
                         libgl1-mesa-glx \
                         libegl1-mesa \
@@ -92,26 +107,30 @@ From: debian:bookworm-slim
                         libxcomposite1 \
                         libasound2 \
                         libxi6 \
-                        libxtst6
-                        build-essential \
-                        wget \
+                        libxtst6 \
                         bzip2 \
                         ca-certificates \
-                        libglib2.0-0 \
+                        libglib2.0-dev \
                         libxext6 \
                         libsm6 \
-                        libxrender1 \
-    
+                        libxrender1
+
+    apt-get update && apt-get -y upgrade && apt update
+    apt-get install -y  wget
+        
     rm -rf /var/lib/apt/lists/*
     apt-get clean
 
-    CONDA_INSTALLER_VERSION="2023.03-1"
+    CONDA_INSTALLER_VERSION={{CONDA_INSTALLER_VERSION}}
     CONDA_INSTALLER_FILE="Anaconda3-${CONDA_INSTALLER_VERSION}-Linux-x86_64.sh"
     curl -O "https://repo.anaconda.com/archive/${CONDA_INSTALLER_FILE}"
     ANACONDA_INSTALL_PATH="${SINGULARITY_ROOTFS}/anaconda3"
     
     /bin/bash "${CONDA_INSTALLER_FILE}" -bfp "${ANACONDA_INSTALL_PATH}"
 
+    export PATH=/anaconda3/bin:$PATH
+
+    # scikit-learn-intelex
     conda config --file /.condarc --add channels defaults
     conda config --file /.condarc --add channels conda-forge
     conda update conda
